@@ -65,6 +65,9 @@ Google Analytics for tracking events.
 
 Testing:
 Jest.
+```bash
+  npm test
+```
 
 Browser DevTools for debugging.
 
