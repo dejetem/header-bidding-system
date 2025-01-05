@@ -94,6 +94,7 @@ Response:
 Request Bids:
 POST /request-bids
 ```javascript
+Response:
 {
   "adHtml": "<div>Winning Ad</div>"
 }
