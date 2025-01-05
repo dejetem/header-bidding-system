@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Header Bidding System</title>
+  <style>
+    /* Add some basic styles for the ad container */
+    #ad-container {
+      width: 300px;
+      height: 250px;
+      border: 1px solid #000;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Header Bidding System</h1>
+  <div id="ad-container">
+    <p>Loading ad...</p>
+  </div>
+
+  <script>
+    // Function to load ads when the ad container is in view
+    function lazyLoadAd() {
+      const adContainer = document.getElementById('ad-container');
+      if (!adContainer) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Load the ad when the container is in view
+            loadAd();
+            observer.disconnect(); // Stop observing after the ad is loaded
+          }
+        });
+      });
+
+      observer.observe(adContainer);
+    }
+
+    // Function to load the ad
+    async function loadAd() {
+      try {
+        // Add an ad unit
+        const addAdUnitResponse = await fetch('http://localhost:3000/ad-unit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: 'div-1',
+            sizes: [['300', '250']],
+            deviceType: 'desktop',
+          }),
+        });
+        const addAdUnitData = await addAdUnitResponse.json();
+        console.log(addAdUnitData.message);
+
+        // Request bids
+        const requestBidsResponse = await fetch('http://localhost:3000/request-bids', {
+          method: 'POST',
+        });
+        const requestBidsData = await requestBidsResponse.json();
+
+        // Render the ad
+        const adContainer = document.getElementById('ad-container');
+        if (adContainer) {
+          if (requestBidsData.adHtml) {
+            adContainer.innerHTML = requestBidsData.adHtml;
+          } else {
+            // Fallback ad if no bids are received
+            adContainer.innerHTML = `
+              <div style="text-align: center;">
+                <p>No bids received. Displaying fallback ad.</p>
+                <img src="https://via.placeholder.com/300x250" alt="Fallback Ad" />
+              </div>
+            `;
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        const adContainer = document.getElementById('ad-container');
+        if (adContainer) {
+          // Fallback ad in case of an error
+          adContainer.innerHTML = `
+            <div style="text-align: center;">
+              <p>Error loading ad. Displaying fallback ad.</p>
+              <img src="https://via.placeholder.com/300x250" alt="Fallback Ad" />
+            </div>
+          `;
+        }
+      }
+    }
+
+    // Start lazy loading the ad
+    lazyLoadAd();
+  </script>
+</body>
+</html>
